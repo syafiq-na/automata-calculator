@@ -17,13 +17,72 @@ This project implements fundamental theories of computation—including DFA stri
 
 The backend has been modularized into dedicated utility and service classes to ensure high maintainability, separation of concerns, and clean abstraction:
 
-```text
-├── app.py                  # Flask Application Layer (API Controllers & Routing)
-├── automata.py             # Facade interface for all automata engines
-├── dfa.py                  # Core DFA Class handling state transitions and validation
-├── nfa.py                  # Core NFA Class managing Epsilon Closures and moves
-├── thompson.py             # RegexConverter Service (Tokenization, Postfix, NFA build)
-├── minimizer.py            # DFAMinimizer Service implementing partition refinement
-├── equivalence.py          # DFAEquivalenceChecker Service running BFS verification
-└── templates/
-    └── index.html          # Unified SPA (Single Page Application) User Interface
+    ├── app.py                  # Flask Application Layer (API Controllers & Routing)
+    ├── automata.py             # Facade interface for all automata engines
+    ├── dfa.py                  # Core DFA Class handling state transitions and validation
+    ├── nfa.py                  # Core NFA Class managing Epsilon Closures and moves
+    ├── thompson.py             # RegexConverter Service (Tokenization, Postfix, NFA build)
+    ├── minimizer.py            # DFAMinimizer Service implementing partition refinement
+    ├── equivalence.py          # DFAEquivalenceChecker Service running BFS verification
+    └── templates/
+        └── index.html          # Unified SPA (Single Page Application) User Interface
+
+---
+
+## 💻 Getting Started
+
+Follow these instructions to set up and run the simulator locally on your machine.
+
+### Prerequisites
+
+- **Python 3.8 or higher**
+- **pip** (Python package installer)
+
+### Installation
+
+1. **Clone the repository:**
+   Run the following commands in your terminal:
+   `git clone https://github.com/your-username/automata-simulator.git`
+   `cd automata-simulator`
+
+2. **Install dependencies:**
+   This project relies on the lightweight standard Flask library. Install it directly via pip:
+   `pip install Flask`
+
+### Running the Application
+
+Execute the entry point script from the root directory:
+`python app.py`
+
+The application will spin up a local development server. A browser window should automatically open to `http://127.0.0.1:5000/`. If it doesn't, navigate to that URL manually.
+
+---
+
+## 📊 API Endpoint Documentation
+
+The frontend communicates with the Flask server through clean, structured JSON payloads. This makes it easy for team members to extend the UI or integrate external tools:
+
+### 1. Test DFA
+- **Endpoint**: `POST /api/dfa/test`
+- **Payload**: `{ "states": [...], "alpha": [...], "start": "q0", "finals": [...], "trans": {...}, "input_str": "..." }`
+
+### 2. Regex to NFA
+- **Endpoint**: `POST /api/regex/to-nfa`
+- **Payload**: `{ "regex": "a(b|c)*" }`
+
+### 3. Minimize DFA
+- **Endpoint**: `POST /api/dfa/minimize`
+- **Payload**: `{ "states": [...], "alpha": [...], "start": "q0", "finals": [...], "trans": {...} }`
+
+### 4. Check Equivalence
+- **Endpoint**: `POST /api/dfa/equivalence`
+- **Payload**: `{ "dfa1": {...}, "dfa2": {...} }`
+
+---
+
+## 👥 Contributors
+
+Developed as a collaborative project for the Theory of Computation course by Superteam SCC UNS.
+
+- **Syafiq Nafil Arkan** - Backend OOP Architecture & Core Refactoring
+- *[Add other group members here]*
