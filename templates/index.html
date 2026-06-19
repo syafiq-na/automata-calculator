@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automata Calculator 1.0 (OOPv2)</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/cytoscape.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dagre.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/cytoscape-dagre.js') }}"></script>
+</head>
+<body>
+<div class="app-container">
+    <nav class="app-sidebar">
+        <div class="sidebar-header"><span class="logo-icon">⚙</span><span class="logo-text">AutomataCalc</span></div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-links">
+            <button class="nav-link activeTab" onclick="switchTab('tab1', this)"><span class="nav-icon">↹</span>DFA Tester</button>
+            <button class="nav-link" onclick="switchTab('tab2', this)"><span class="nav-icon">∫</span>Regex to NFA</button>
+            <button class="nav-link" onclick="switchTab('tab3', this)"><span class="nav-icon">⚔</span>Minimizer</button>
+            <button class="nav-link" onclick="switchTab('tab4', this)"><span class="nav-icon">⚖</span>Equivalence</button>
+        </div>
+        <div class="sidebar-footer">SCC UNS Superteam 2024</div>
+    </nav>
+
+    <main class="app-main">
+        <section id="tab1" class="panel activeTab">
+            <div class="panel-header">Deterministic Finite Automaton Tester</div>
+            <div class="panel-grid-two">
+                <div class="app-card">
+                    <div class="card-title">DFA Definition (Matrix Form)</div>
+                    <div class="form-group-inline">
+                        <input id="dfa_states" type="text" placeholder="e.g., q0, q1, q2">
+                        <input id="dfa_alpha" type="text" placeholder="e.g., 0, 1">
+                    </div>
+                    <button class="btn btn-secondary mt-2 w-full" onclick="generateDFAMatrix()">Generate Transition Matrix</button>
+                    <div class="form-group-inline mt-3">
+                        <div class="input-field">
+                            <label for="dfa_start">Start State</label>
+                            <input id="dfa_start" type="text" placeholder="e.g., q0">
+                        </div>
+                        <div class="input-field">
+                            <label for="dfa_final">Final State(s)</label>
+                            <input id="dfa_final" type="text" placeholder="e.g., q2">
+                        </div>
+                    </div>
+                    <div id="dfa_trans_container" class="matrix-input-area"></div>
+                    <button class="btn btn-success w-full mt-3" onclick="updateDFADiagram()">Render / Update Diagram</button>
+                </div>
+                <div class="panel-column-results">
+                    <div class="app-card compact-card">
+                        <div class="card-title">String Evaluation</div>
+                        <input id="dfa_input_str" type="text" placeholder="Enter string, e.g., 1010">
+                        <button class="btn btn-primary w-full mt-2" onclick="testDFAResult()">Evaluate DFA</button>
+                        <div id="dfa_result" class="result-box-dynamic mt-3" style="display:none"></div>
+                    </div>
+                    <div class="app-card trace-card">
+                        <div class="card-title">Trace History</div>
+                        <div id="dfa_trace" class="trace-history-area"><p class="text-muted small">Run an evaluation to see state transitions.</p></div>
+                    </div>
+                </div>
+            </div>
+            <div class="app-card mt-3">
+                <div class="card-title-center">Automaton Visualization Window</div>
+                <div class="diagram-viewport"><div id="diagram-container" class="cy-diagram"><p class="text-placeholder">Diagram will appear here after Render...</p></div></div>
+            </div>
+        </section>
+
+        <section id="tab2" class="panel">
+            <div class="panel-header">Regular Expression Converter (Thompson)</div>
+            <div class="panel-grid-regex">
+                <div class="app-card regex-input-card">
+                    <div class="card-title">Enter Regex</div>
+                    <div class="form-group-regex">
+                        <input id="regex-input" type="text" placeholder="e.g., a(b|c)*; E means epsilon" value="a(b|c)*">
+                        <button class="btn btn-primary" onclick="convertRegexNFA()">Construct NFA</button>
+                    </div>
+                </div>
+                <div class="app-card nfa-results-card">
+                    <div class="card-title">NFA Metadata & String Test</div>
+                    <div class="form-group-inline">
+                        <input id="nfa_input_str" type="text" placeholder="Test NFA with string...">
+                        <button class="btn btn-success" onclick="testNFA()">Test NFA</button>
+                    </div>
+                    <div id="nfa_result" class="result-box-dynamic mt-2" style="display:none"></div>
+                </div>
+            </div>
+            <div class="app-card nfa-trans-card">
+                <div class="card-title">Generated NFA Transition Structure</div>
+                <div id="nfa-trans-table" class="matrix-input-area">NFA structure will appear here...</div>
+            </div>
+            <div class="app-card mt-3">
+                <div class="card-title-center">NFA Diagram Visualization</div>
+                <div class="diagram-viewport"><div id="diagram2-container" class="cy-diagram"></div></div>
+            </div>
+        </section>
+
+        <section id="tab3" class="panel">
+            <div class="panel-header">DFA State Minimizer (Reductor)</div>
+            <div class="panel-grid-minimize">
+                <div class="app-card minimize-config-card">
+                    <div class="card-title">Original DFA Definition</div>
+                    <input id="min_states" type="text" placeholder="e.g., q0, q1, q2" class="mb-2">
+                    <input id="min_alpha" type="text" placeholder="e.g., a, b" class="mb-2">
+                    <button class="btn btn-secondary w-full" onclick="generateMinMatrix()">Generate Matrix</button>
+                    <div class="form-group-inline mt-3">
+                        <div class="input-field">
+                            <label for="min_start">Start State</label>
+                            <input id="min_start" type="text" placeholder="e.g., q0">
+                        </div>
+                        <div class="input-field">
+                            <label for="min_final">Final State(s)</label>
+                            <input id="min_final" type="text" placeholder="e.g., q1, q2">
+                        </div>
+                    </div>
+                    <div id="min_trans_container" class="matrix-input-area"></div>
+                    <button class="btn btn-primary w-full mt-3" onclick="minimizeDFA()">Minimize Automatons</button>
+                </div>
+                <div class="app-card minimize-result-card">
+                    <div class="card-title">Minimized DFA Reduction Info</div>
+                    <div id="min_result" class="reduction-info-area">Reduction mapping will appear here...</div>
+                </div>
+            </div>
+            <div class="diagram-comparison-grid mt-3">
+                <div class="app-card"><div class="card-title">Original DFA Diagram</div><div class="diagram-viewport compact-viewport"><div id="diagram3-container" class="cy-diagram"></div></div></div>
+                <div class="app-card"><div class="card-title">Minimized DFA Diagram</div><div class="diagram-viewport compact-viewport"><div id="diagram4-container" class="cy-diagram"></div></div></div>
+            </div>
+        </section>
+
+        <section id="tab4" class="panel">
+            <div class="panel-header">DFA Equivalence Checker (Comparison)</div>
+            <div class="diagram-comparison-grid mb-3">
+                <div class="app-card">
+                    <div class="card-title">DFA Machine 1</div>
+                    <input id="eq1_states" type="text" placeholder="States, e.g., q0, q1" class="mb-2">
+                    <input id="eq1_alpha" type="text" placeholder="Alphabet, e.g., 0, 1" class="mb-2">
+                    <button class="btn btn-secondary w-full" onclick="generateEquivMatrix(1)">Generate Matrix 1</button>
+                    <input id="eq1_start" type="text" placeholder="Start state, e.g., q0" class="mt-2 mb-2">
+                    <input id="eq1_final" type="text" placeholder="Final state(s), e.g., q1" class="mb-2">
+                    <div id="eq1_trans_container" class="matrix-input-area"></div>
+                </div>
+                <div class="app-card">
+                    <div class="card-title">DFA Machine 2</div>
+                    <input id="eq2_states" type="text" placeholder="States, e.g., A, B, C" class="mb-2">
+                    <input id="eq2_alpha" type="text" placeholder="Alphabet, e.g., 0, 1" class="mb-2">
+                    <button class="btn btn-secondary w-full" onclick="generateEquivMatrix(2)">Generate Matrix 2</button>
+                    <input id="eq2_start" type="text" placeholder="Start state, e.g., A" class="mt-2 mb-2">
+                    <input id="eq2_final" type="text" placeholder="Final state(s), e.g., B" class="mb-2">
+                    <div id="eq2_trans_container" class="matrix-input-area"></div>
+                </div>
+            </div>
+            <div class="text-center mb-3"><button class="btn btn-success btn-lg px-5 shadow" onclick="checkEquivalence()">Compare DFAs</button></div>
+            <div class="app-card result-panel-equivalence" style="display:none" id="equiv_result_card">
+                <div class="card-title-center">Comparison Analysis</div><div id="equiv_result" class="equiv-result-display"></div>
+            </div>
+            <div class="diagram-comparison-grid mt-3">
+                <div class="app-card"><div class="card-title">DFA Machine 1 Graph</div><div class="diagram-viewport compact-viewport"><div id="diagram5a-container" class="cy-diagram"></div></div></div>
+                <div class="app-card"><div class="card-title">DFA Machine 2 Graph</div><div class="diagram-viewport compact-viewport"><div id="diagram5b-container" class="cy-diagram"></div></div></div>
+            </div>
+        </section>
+    </main>
+</div>
+<script src="{{ url_for('static', filename='js/visualizer.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
